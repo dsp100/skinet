@@ -19,6 +19,7 @@ export interface IOrder {
     status: number;
     paymentIntentId: string;
 }
+
 export interface IOrderItem {
     productId: number;
     productName: string;

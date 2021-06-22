@@ -53,7 +53,6 @@ namespace Infrastructure.Services
 
             //return
             return order;
-
         }
         public async Task<IReadOnlyList<DeliveryMethod>> GetDeliveryMethodsAsync()
         {

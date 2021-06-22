@@ -1,5 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { Form, FormGroup } from '@angular/forms';
+import { FormGroup } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { BasketService } from 'src/app/basket/basket.service';
@@ -16,7 +16,8 @@ export class CheckoutPaymentComponent implements OnInit {
 @Input() checkoutForm: FormGroup;
 
 
-  constructor(private basketService: BasketService, private checkoutService: CheckoutService, private toastr: ToastrService, private router: Router ) { }
+  constructor(private basketService: BasketService, private checkoutService: CheckoutService, 
+    private toastr: ToastrService, private router: Router ) { }
 
   ngOnInit() {
 
@@ -37,12 +38,12 @@ export class CheckoutPaymentComponent implements OnInit {
     });
   }
 
-  private getOrderToCreate(basket: IBasket ){
+  private getOrderToCreate(basket: IBasket) {
     return{
       basketId: basket.id,
       deliveryMethodId: +this.checkoutForm.get('deliveryForm').get('deliveryMethod').value,
       shipToAddress: this.checkoutForm.get('addressForm').value
-    }
+    };
   }
 
 }

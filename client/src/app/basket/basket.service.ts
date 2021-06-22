@@ -12,7 +12,7 @@ import { IProduct } from '../shared/models/product';
   providedIn: 'root'
 })
 export class BasketService {
-baseUrl=environment.apiUrl;
+baseUrl = environment.apiUrl;
 private basketSource = new BehaviorSubject<IBasket>(null);
 basket$ = this.basketSource.asObservable();
 private basketTotalSource = new BehaviorSubject<IBasketTotals>(null);
@@ -21,21 +21,34 @@ shipping = 0;
 
   constructor(private http: HttpClient) { }
 
+  createPaymentIntent(){
+    return this.http.post(this.baseUrl + 'payments/' + this.getCurrentBasketValue().id, {})
+    .pipe(
+    map((basket: IBasket) => {
+      this.basketSource.next(basket);
+      console.log(this.getCurrentBasketValue());
+    })
+    );
+  }
+
   setShippingPrice(deliveryMethod: IDeliveryMethod){
     this.shipping = deliveryMethod.price;
+    const basket = this.getCurrentBasketValue();
+    basket.deliveryMethodId = deliveryMethod.id;
     this.calculateTotals();
+    this.setBasket(basket);
   }
 
   getBasket(id: string){
-    return this.http.get(this.baseUrl + 'basket?id='+ id)
+    return this.http.get(this.baseUrl + 'basket?id=' + id)
     .pipe(
       map((basket: IBasket) => {
           this.basketSource.next(basket);
         this.calculateTotals();
-
       })
     )
   }
+
     setBasket(basket: IBasket){
       return this.http.post(this.baseUrl + 'basket', basket).subscribe((response: IBasket) =>{
         this.basketSource.next(response);
@@ -137,10 +150,8 @@ shipping = 0;
         pictureUrl: item.pictureUrl,
         quantity,
         brand: item.productBrand,
-        type: item.productType,
-      };
+        type: item.productType
+      }
   }
-
-
 }
 
