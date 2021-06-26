@@ -26,7 +26,7 @@ shipping = 0;
     .pipe(
     map((basket: IBasket) => {
       this.basketSource.next(basket);
-      console.log(this.getCurrentBasketValue());
+     
     })
     );
   }
@@ -35,6 +35,7 @@ shipping = 0;
     this.shipping = deliveryMethod.price;
     const basket = this.getCurrentBasketValue();
     basket.deliveryMethodId = deliveryMethod.id;
+    basket.shippingPrice = deliveryMethod.price;
     this.calculateTotals();
     this.setBasket(basket);
   }
@@ -44,6 +45,7 @@ shipping = 0;
     .pipe(
       map((basket: IBasket) => {
           this.basketSource.next(basket);
+          this.shipping = basket.shippingPrice;
         this.calculateTotals();
       })
     )

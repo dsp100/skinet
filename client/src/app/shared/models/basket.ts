@@ -7,6 +7,7 @@
     clientSecret?: string;
     paymentIntentId?: string;
     deliveryMethodId?: number;
+    shippingPrice?: number;
 }
 
     export interface IBasketItem {

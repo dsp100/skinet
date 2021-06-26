@@ -4,8 +4,10 @@ using System.Threading.Tasks;
 using Core.Entities;
 using Core.Entities.OrderAggregate;
 using Core.Interfaces;
+using Core.Specifications;
 using Microsoft.Extensions.Configuration;
 using Stripe;
+using Order = Core.Entities.OrderAggregate.Order;
 using Product = Core.Entities.Product;
 
 namespace Infrastructure.Services
@@ -18,20 +20,21 @@ namespace Infrastructure.Services
 
         public PaymentService(IBasketRepository basketRepository, IUnitOfWork unitOfWork, IConfiguration config)
         {
+            _config = config;
             _basketRepository = basketRepository;
             _unitOfWork = unitOfWork;
-            _config = config;
+           
 
         }
 
         public async Task<CustomerBasket> CreateOrUpdatePaymentIntent(string basketId)
         {
                                                      
-                Stripe.StripeConfiguration.ApiKey = _config["StripeSettings:SecretKey"];
+                StripeConfiguration.ApiKey = _config["StripeSettings:SecretKey"];
 
                 var basket = await _basketRepository.GetBasketAsync(basketId);
 
-                if (basket == null) return null;
+                if(basket == null ) return null;
 
                 var shippingPrice = 0m; 
 
@@ -58,8 +61,9 @@ namespace Infrastructure.Services
                {
                    var options = new PaymentIntentCreateOptions
                    {
-                        Amount = (long)basket.Items.Sum(i => i.Quantity * (i.Price * 100)) + ((long)shippingPrice * 100),
-                        Currency = "usd",
+                        Amount = (long)basket.Items.Sum(i => i.Quantity * (i.Price * 100)) + (long)
+                        shippingPrice * 100,
+                        Currency = "gbp",
                         PaymentMethodTypes = new List<string> {"card"}
                    };
                    intent = await service.CreateAsync(options);
@@ -70,7 +74,8 @@ namespace Infrastructure.Services
                {
                     var options = new PaymentIntentUpdateOptions
                     {
-                         Amount = (long)basket.Items.Sum(i => (i.Quantity * (i.Price * 100))) + ((long)shippingPrice * 100)
+                         Amount = (long)basket.Items.Sum(i => (i.Quantity * (i.Price * 100))) + (long)
+                         shippingPrice * 100
                     };
                     await service.UpdateAsync(basket.PaymentIntentId, options);
                }
@@ -78,6 +83,35 @@ namespace Infrastructure.Services
                await _basketRepository.UpdateBasketAsync(basket);
 
                return basket;
+        }
+
+        public async Task<Core.Entities.OrderAggregate.Order> UpdateOrderPaymentFailed(string paymentItentId)
+        {
+             var spec = new OrderByPaymentItentIdSpecification(paymentItentId);
+            var order = await _unitOfWork.Repository<Order>().GetEntityWithSpec(spec);
+
+            if(order == null) return null;
+
+            order.Status = OrderStatus.PaymentFailed;
+            await _unitOfWork.Complete();
+
+            return order;
+
+        }
+
+        public async Task<Core.Entities.OrderAggregate.Order> UpdateOrderPaymentSucceeded(string paymentItentId)
+        {
+            var spec = new OrderByPaymentItentIdSpecification(paymentItentId);
+            var order = await _unitOfWork.Repository<Order>().GetEntityWithSpec(spec);
+
+            if(order == null) return null;
+
+            order.Status = OrderStatus.PaymentReceived;
+            _unitOfWork.Repository<Order>().Update(order);
+
+            await _unitOfWork.Complete();
+
+            return order;
         }
     }
 }

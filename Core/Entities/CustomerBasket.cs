@@ -23,7 +23,9 @@ namespace Core.Entities
 
         public string  PaymentIntentId { get; set; }
 
-        //public decimal ShippingPrice {get; set;}
+        public decimal ShippingPrice {get; set;}
+
+        
 
     }
 }
